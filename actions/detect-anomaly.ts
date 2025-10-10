@@ -31,19 +31,42 @@ export interface AnomalyDetectionResult {
 }
 
 export async function detectAnomalyAction(
-  imageUrl: string,
+  imageDataOrUrl: string,
   prompt: string = "anomaly"
 ): Promise<{ data?: AnomalyDetectionResult; error?: string }> {
   try {
-    if (!imageUrl) {
+    if (!imageDataOrUrl) {
       return { error: "No image provided" }
     }
 
     console.log("Starting anomaly detection with fal.ai...")
-    console.log("Image URL:", imageUrl)
     console.log("Prompt:", prompt)
 
-    const result = await fal.subscribe("fal-ai/moondream3-preview/detect", {
+    let imageUrl = imageDataOrUrl
+
+    // If it's a data URI, upload it to fal.ai storage first
+    if (imageDataOrUrl.startsWith("data:")) {
+      console.log("Uploading image to fal.ai storage...")
+      try {
+        // Convert data URI to blob
+        const response = await fetch(imageDataOrUrl)
+        const blob = await response.blob()
+
+        // Upload to fal.ai storage
+        imageUrl = await fal.storage.upload(blob)
+        console.log("Image uploaded to:", imageUrl)
+      } catch (uploadError) {
+        console.error("Failed to upload image:", uploadError)
+        return { error: "Failed to upload image to storage" }
+      }
+    }
+
+    // Add timeout wrapper
+    const timeoutPromise = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error("Detection timed out after 60 seconds")), 60000)
+    )
+
+    const detectionPromise = fal.subscribe("fal-ai/moondream3-preview/detect", {
       input: {
         image_url: imageUrl,
         prompt: prompt,
@@ -55,6 +78,8 @@ export async function detectAnomalyAction(
         }
       },
     })
+
+    const result = await Promise.race([detectionPromise, timeoutPromise])
 
     console.log("Detection result:", result.data)
 
