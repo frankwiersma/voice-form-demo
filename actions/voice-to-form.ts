@@ -7,16 +7,23 @@ import { GoogleGenerativeAI } from "@google/generative-ai"
 import { google } from "@ai-sdk/google"
 import { generateObject } from "ai"
 
-import { doctorFormSchema } from "@/lib/schema"
-
-const extractionSchema = doctorFormSchema.partial()
+import { doctorFormSchema, substationInspectionSchema } from "@/lib/schema"
+import { DEMOS } from "@/lib/demos"
 
 export type STTProvider = "elevenlabs" | "deepgram" | "gemini"
 
 export async function voiceToFormAction(
   audio: File,
-  sttProvider: STTProvider = "elevenlabs"
+  sttProvider: STTProvider = "elevenlabs",
+  demoId: string = "medical-intake"
 ) {
+  // Get the schema for the selected demo
+  const demo = DEMOS.find(d => d.id === demoId)
+  if (!demo) {
+    return { data: {}, error: "Demo not found" }
+  }
+
+  const extractionSchema = demo.schema.partial()
   try {
     if (!audio) {
       return { data: {} }
@@ -111,75 +118,38 @@ export async function voiceToFormAction(
       return { data: {} }
     }
 
-    const schemaShape = doctorFormSchema.shape
+    const schemaShape = demo.schema.shape
     const fieldNames = Object.keys(schemaShape)
 
-    const systemPrompt = `You are an expert medical transcriptionist and clinical documentation specialist. Your job is to extract structured patient information from a doctor's natural speech, understanding both explicit statements and implicit contextual information.
+    // Generate field descriptions dynamically from demo config
+    const fieldDescriptions = demo.fields.map(field => {
+      return `- ${field.name}: ${field.label}`
+    }).join('\n')
+
+    // Generate extraction instructions based on demo type
+    const extractionInstructions = demo.id === "medical-intake"
+      ? `You are an expert medical transcriptionist and clinical documentation specialist. Extract structured patient information from natural speech.`
+      : `You are an expert inspection report transcriptionist. Extract structured inspection information from natural speech about a substation routine inspection.`
+
+    const systemPrompt = `${extractionInstructions}
 
 FIELD EXTRACTION RULES:
-
-1. **patientName**: Extract the patient's full name from any mention
-   - Listen for: "patient is...", "this is...", "patient's name is...", "I have [name]", "seeing [name]"
-   - Examples: "patient John Doe" → "John Doe", "seeing Sarah Smith today" → "Sarah Smith"
-
-2. **age**: Extract patient's age as a number only
-   - Listen for: "[number] years old", "age [number]", "[number] year old patient"
-   - Examples: "28 years old" → "28", "patient is 45" → "45"
-
-3. **gender**: Intelligently infer from ANY contextual clue:
-   - Pronouns: he/him/his → "male", she/her/hers → "female"
-   - Explicit: male/female/man/woman/boy/girl → use appropriate gender
-   - Names: Use common name patterns if obvious (John → male, Sarah → female)
-   - Titles: Mr. → "male", Ms./Mrs. → "female"
-
-4. **chiefComplaint**: The PRIMARY medical concern/reason for visit
-   - This is the MAIN problem, not all symptoms
-   - Listen for: "complaining of...", "presenting with...", "came in for...", "has...", "problem is..."
-   - Phrases like "stomach pain", "headache", "chest pain", "cough" are chief complaints
-   - Examples: "has stomach pain" → "stomach pain", "presenting with headache" → "headache"
-   - Look for pain, discomfort, or primary medical issues mentioned FIRST or with emphasis
-
-5. **symptoms**: ALL symptoms and clinical observations mentioned
-   - This is a comprehensive list, separate from chief complaint
-   - Include: pain descriptions, duration, severity, associated symptoms
-   - Examples: "severe headache for 3 days with nausea", "fever and chills"
-
-6. **medicalHistory**: Past medical conditions, surgeries, chronic diseases
-   - Listen for: "history of...", "past...", "previously had...", "diagnosed with..."
-   - Examples: "history of diabetes", "had appendectomy"
-
-7. **allergies**: Any allergies mentioned (medication, food, environmental)
-   - Listen for: "allergic to...", "allergy to...", "has allergies..."
-   - Include: drug allergies, hay fever, food allergies, etc.
-
-8. **currentMedications**: Current medications patient is taking
-   - Listen for: "taking...", "on...", "medication...", "prescribed..."
-   - Examples: "takes vitamin D", "on insulin"
+${fieldDescriptions}
 
 CONTEXTUAL INTELLIGENCE:
 - Infer information from surrounding context
-- A symptom mentioned first is often the chief complaint
-- If someone says "he has stomach pain", extract: chiefComplaint="stomach pain", gender="male", symptoms="stomach pain"
-- Understand medical terminology and casual descriptions
-- Use clinical judgment to categorize information appropriately
+- Understand terminology and casual descriptions
 - CRITICAL: If a field is not mentioned, DO NOT include it in the output at all. Do NOT use the word "undefined" or empty strings.
 - Only include fields that have actual information extracted from the speech
 - Extract EVERYTHING mentioned, reading between the lines for implicit information
 - Be concise - do not repeat the same information multiple times`
 
-    const userPrompt = `Extract patient data from this medical dictation. Be concise - extract each field ONCE only.
+    const userPrompt = `Extract data from this dictation. Be concise - extract each field ONCE only.
 
 Dictation: "${transcribedText}"
 
 Extract these fields (omit if not mentioned):
-- patientName: full name
-- age: number only
-- gender: "male" if he/him/his, "female" if she/her/hers
-- chiefComplaint: main problem
-- symptoms: clinical observations
-- medicalHistory: past conditions
-- allergies: allergy list
-- currentMedications: current meds`
+${fieldDescriptions}`
 
     let extractedData
     let modelUsed = "unknown"
@@ -211,23 +181,20 @@ Extract these fields (omit if not mentioned):
           }
         })
 
-        const extractionPrompt = `Extract patient information from this medical dictation into valid JSON. Extract ALL fields mentioned.
+        // Generate JSON template from demo fields
+        const jsonTemplate = demo.fields.reduce((acc, field) => {
+          acc[field.name] = field.label.toLowerCase()
+          return acc
+        }, {} as Record<string, string>)
+
+        const extractionPrompt = `Extract information from this dictation into valid JSON. Extract ALL fields mentioned.
 
 Dictation: "${transcribedText}"
 
 Return ONLY valid JSON with these fields (omit field entirely if not mentioned):
-{
-  "patientName": "full name",
-  "age": "number only",
-  "gender": "male or female",
-  "chiefComplaint": "main problem",
-  "symptoms": "all symptoms",
-  "medicalHistory": "past conditions",
-  "allergies": "allergies",
-  "currentMedications": "medications"
-}
+${JSON.stringify(jsonTemplate, null, 2)}
 
-Important: Extract gender from pronouns (he/him=male, she/her=female), age from any mention of years old, medications from "takes" or "on", allergies from "allergic to".`
+Important: Extract all information from the dictation. Infer context where appropriate.`
 
         const result = await withTimeout(
           model.generateContent(extractionPrompt),
