@@ -37,6 +37,7 @@ export const substationInspectionSchema = z.object({
   cleanlinessVegetation: z.string().optional(),
   securityStatus: z.string().optional(),
   unusualObservations: z.string().optional(),
+  imageAnomalyDetection: z.string().optional(),
   maintenanceActions: z.string().optional(),
   additionalRemarks: z.string().optional(),
   recommendations: z.string().optional(),

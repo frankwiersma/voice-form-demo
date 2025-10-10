@@ -29,6 +29,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { VoiceButton } from "@/components/ui/voice-button"
+import { AnomalyDetector } from "@/components/anomaly-detector"
 
 const AUDIO_CONSTRAINTS: MediaStreamConstraints = {
   audio: {
@@ -324,6 +325,7 @@ export default function DoctorFormPage() {
                     {currentDemo.fields.map((field, index) => {
                       // Determine if this field should take full width
                       const isFullWidth = field.type === "textarea" ||
+                        field.type === "anomaly-detector" ||
                         (index >= 4 && currentDemo.fields[index - 1]?.type === "textarea")
 
                       return (
@@ -335,7 +337,13 @@ export default function DoctorFormPage() {
                             <FormItem className={isFullWidth ? "sm:col-span-2" : ""}>
                               <FormLabel>{field.label}</FormLabel>
                               <FormControl>
-                                {field.type === "textarea" ? (
+                                {field.type === "anomaly-detector" ? (
+                                  <AnomalyDetector
+                                    onDetectionComplete={(results) => {
+                                      formField.onChange(results)
+                                    }}
+                                  />
+                                ) : field.type === "textarea" ? (
                                   <Textarea
                                     placeholder={field.placeholder}
                                     {...formField}

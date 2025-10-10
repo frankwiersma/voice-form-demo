@@ -1,7 +1,7 @@
 import { z } from "zod"
 import { doctorFormSchema, substationInspectionSchema } from "./schema"
 
-export type FieldType = "text" | "textarea"
+export type FieldType = "text" | "textarea" | "anomaly-detector"
 
 export interface FormField {
   name: string
@@ -175,6 +175,12 @@ export const DEMOS: DemoConfig[] = [
         type: "textarea",
       },
       {
+        name: "imageAnomalyDetection",
+        label: "Image Anomaly Detection",
+        placeholder: "Upload inspection photos...",
+        type: "anomaly-detector",
+      },
+      {
         name: "maintenanceActions",
         label: "Maintenance/Corrective Actions",
         placeholder: "Actions performed...",
@@ -211,6 +217,7 @@ export const DEMOS: DemoConfig[] = [
       cleanlinessVegetation: "",
       securityStatus: "",
       unusualObservations: "",
+      imageAnomalyDetection: "",
       maintenanceActions: "",
       additionalRemarks: "",
       recommendations: "",
