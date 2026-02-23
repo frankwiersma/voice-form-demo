@@ -12,10 +12,17 @@ import { DEMOS } from "@/lib/demos"
 
 export type STTProvider = "elevenlabs" | "deepgram" | "gemini"
 
+export interface ApiKeyOverrides {
+  elevenlabs?: string
+  deepgram?: string
+  google?: string
+}
+
 export async function voiceToFormAction(
   audio: File,
   sttProvider: STTProvider = "elevenlabs",
-  demoId: string = "medical-intake"
+  demoId: string = "medical-intake",
+  keyOverrides?: ApiKeyOverrides
 ) {
   // Get the schema for the selected demo
   const demo = DEMOS.find(d => d.id === demoId)
@@ -29,9 +36,10 @@ export async function voiceToFormAction(
       return { data: {} }
     }
 
-    const elevenLabsApiKey = process.env.ELEVENLABS_API_KEY
-    const deepgramApiKey = process.env.DEEPGRAM_API_KEY
-    const googleApiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY
+    // Prefer client-provided keys, fall back to server env vars
+    const elevenLabsApiKey = keyOverrides?.elevenlabs || process.env.ELEVENLABS_API_KEY
+    const deepgramApiKey = keyOverrides?.deepgram || process.env.DEEPGRAM_API_KEY
+    const googleApiKey = keyOverrides?.google || process.env.GOOGLE_GENERATIVE_AI_API_KEY
 
     // Validate STT provider API keys
     if (sttProvider === "elevenlabs" && !elevenLabsApiKey) {

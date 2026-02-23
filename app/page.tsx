@@ -11,6 +11,8 @@ import { DEMOS, DemoConfig } from "@/lib/demos"
 import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { DemoSelector } from "@/components/demo-selector"
+import { ApiKeyModal } from "@/components/api-key-modal"
+import { getAllKeys, hasKey, type Provider } from "@/lib/apiKeys"
 import {
   Card,
   CardContent,
@@ -56,6 +58,8 @@ export default function DoctorFormPage() {
   const [isProcessing, setIsProcessing] = useState(false)
   const [error, setError] = useState("")
   const [sttProvider, setSttProvider] = useState<STTProvider>("gemini")
+  const [keyModalOpen, setKeyModalOpen] = useState(false)
+  const [keyModalProvider, setKeyModalProvider] = useState<Provider>("google")
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const audioChunksRef = useRef<Blob[]>([])
@@ -92,7 +96,7 @@ export default function DoctorFormPage() {
           type: audioBlob.type,
         })
 
-        const result = await voiceToFormAction(audioFile, sttProvider, selectedDemoId)
+        const result = await voiceToFormAction(audioFile, sttProvider, selectedDemoId, getAllKeys())
 
         if (result.data && Object.keys(result.data).length > 0) {
           // Animate typing effect for each field
@@ -197,6 +201,19 @@ export default function DoctorFormPage() {
 
   return (
     <div className="min-h-screen flex relative overflow-hidden bg-gradient-to-br from-blue-50 via-slate-50 to-purple-50 dark:from-slate-950 dark:via-slate-900 dark:to-blue-950">
+      <ApiKeyModal
+        open={keyModalOpen}
+        initialProvider={keyModalProvider}
+        onClose={(saved) => {
+          setKeyModalOpen(false)
+          // If they just saved a key for a specific provider, auto-select it
+          if (saved) {
+            if (keyModalProvider === "elevenlabs" && hasKey("elevenlabs")) setSttProvider("elevenlabs")
+            else if (keyModalProvider === "deepgram" && hasKey("deepgram")) setSttProvider("deepgram")
+            else if (keyModalProvider === "google") setSttProvider("gemini")
+          }
+        }}
+      />
       {/* Subtle dot pattern overlay */}
       <div className="absolute inset-0 opacity-[0.02] dark:opacity-[0.03]"
         style={{
@@ -224,7 +241,19 @@ export default function DoctorFormPage() {
                 AI-powered {currentDemo.description}
               </p>
             </div>
-            <ThemeToggle />
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => { setKeyModalProvider("google"); setKeyModalOpen(true) }}
+                title="API Key Settings"
+                className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-800 transition"
+              >
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.343 3.94c.09-.542.56-.94 1.11-.94h1.093c.55 0 1.02.398 1.11.94l.149.894c.07.424.384.764.78.93.398.164.855.142 1.205-.108l.737-.527a1.125 1.125 0 011.45.12l.773.774c.39.389.44 1.002.12 1.45l-.527.737c-.25.35-.272.806-.107 1.204.165.397.505.71.93.78l.893.15c.543.09.94.56.94 1.109v1.094c0 .55-.397 1.02-.94 1.11l-.893.149c-.425.07-.765.383-.93.78-.165.398-.143.854.107 1.204l.527.738c.32.447.269 1.06-.12 1.45l-.774.773a1.125 1.125 0 01-1.449.12l-.738-.527c-.35-.25-.806-.272-1.203-.107-.397.165-.71.505-.781.929l-.149.894c-.09.542-.56.94-1.11.94h-1.094c-.55 0-1.019-.398-1.11-.94l-.148-.894c-.071-.424-.384-.764-.781-.93-.398-.164-.854-.142-1.204.108l-.738.527c-.447.32-1.06.269-1.45-.12l-.773-.774a1.125 1.125 0 01-.12-1.45l.527-.737c.25-.35.273-.806.108-1.204-.165-.397-.505-.71-.93-.78l-.894-.15c-.542-.09-.94-.56-.94-1.109v-1.094c0-.55.398-1.02.94-1.11l.894-.149c.424-.07.765-.383.93-.78.165-.398.143-.854-.108-1.204l-.526-.738a1.125 1.125 0 01.12-1.45l.773-.773a1.125 1.125 0 011.45-.12l.737.527c.35.25.807.272 1.204.107.397-.165.71-.505.78-.929l.15-.894z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </button>
+              <ThemeToggle />
+            </div>
           </div>
 
           <Card className="relative overflow-hidden shadow-lg border-2 bg-white dark:bg-slate-900">
@@ -252,7 +281,14 @@ export default function DoctorFormPage() {
                     <div className="flex flex-wrap gap-2">
                       <button
                         type="button"
-                        onClick={() => setSttProvider("elevenlabs")}
+                        onClick={() => {
+                          if (!hasKey("elevenlabs") || !hasKey("google")) {
+                            setKeyModalProvider(!hasKey("google") ? "google" : "elevenlabs")
+                            setKeyModalOpen(true)
+                          } else {
+                            setSttProvider("elevenlabs")
+                          }
+                        }}
                         disabled={isRecording || isProcessing}
                         className={cn(
                           "inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200",
@@ -270,7 +306,14 @@ export default function DoctorFormPage() {
                       </button>
                       <button
                         type="button"
-                        onClick={() => setSttProvider("deepgram")}
+                        onClick={() => {
+                          if (!hasKey("deepgram") || !hasKey("google")) {
+                            setKeyModalProvider(!hasKey("google") ? "google" : "deepgram")
+                            setKeyModalOpen(true)
+                          } else {
+                            setSttProvider("deepgram")
+                          }
+                        }}
                         disabled={isRecording || isProcessing}
                         className={cn(
                           "inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200",
@@ -288,7 +331,14 @@ export default function DoctorFormPage() {
                       </button>
                       <button
                         type="button"
-                        onClick={() => setSttProvider("gemini")}
+                        onClick={() => {
+                          if (!hasKey("google")) {
+                            setKeyModalProvider("google")
+                            setKeyModalOpen(true)
+                          } else {
+                            setSttProvider("gemini")
+                          }
+                        }}
                         disabled={isRecording || isProcessing}
                         className={cn(
                           "inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200",
