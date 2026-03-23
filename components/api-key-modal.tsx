@@ -49,7 +49,7 @@ export function ApiKeyModal({ initialProvider, open, onClose }: Props) {
   }
 
   const cfg = PROVIDER_CONFIGS[activeProvider]
-  const canSave = !!(values.google?.trim())
+  const canSave = PROVIDERS.some((p) => values[p]?.trim())
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -85,7 +85,6 @@ export function ApiKeyModal({ initialProvider, open, onClose }: Props) {
               }`}
             >
               {p === "google" ? "Gemini" : p === "elevenlabs" ? "ElevenLabs" : "Deepgram"}
-              {p === "google" && <span className="ml-1 text-pink-500 text-xs">*</span>}
               {values[p] && <span className="ml-1.5 inline-block h-1.5 w-1.5 rounded-full bg-green-500" />}
             </button>
           ))}
@@ -140,7 +139,7 @@ export function ApiKeyModal({ initialProvider, open, onClose }: Props) {
 
         {/* Footer */}
         <div className="flex items-center justify-between border-t border-gray-200 dark:border-gray-700 px-6 py-4">
-          <p className="text-xs text-gray-400">* Google Gemini required for all providers</p>
+          <p className="text-xs text-gray-400">At least one API key is required</p>
           <div className="flex gap-2">
             <button
               onClick={() => onClose(false)}
