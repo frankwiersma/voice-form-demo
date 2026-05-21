@@ -252,7 +252,7 @@ export function VoiceAgent({ open, onClose, onNeedKey, lang }: Props) {
                 listen: { provider: { type: "deepgram", version: "v2", model: "flux-general-multi" } },
                 think: { provider: { type: "google", model: "gemini-3-flash-preview" }, prompt: TENNY_PROMPT },
                 speak: {
-                  provider: { type: "eleven_labs", model_id: "eleven_multilingual_v2", voice_id: "DtsPFCrhbCbbJkwZsb3d" },
+                  provider: { type: "eleven_labs", model_id: "eleven_multilingual_v2", voice_id: "UgBBYS2sOqTuMpoF3BR0" },
                 },
                 greeting: GREETING,
               },
