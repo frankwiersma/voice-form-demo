@@ -63,6 +63,9 @@
 @theme {
   --color-*: initial;
   --radius: initial;
+  /* keep white/black available — used by bg-white, text-white, bg-white/10, etc. */
+  --color-white: #ffffff;
+  --color-black: #000000;
 }
 
 * {

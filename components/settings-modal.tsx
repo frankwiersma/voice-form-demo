@@ -53,9 +53,9 @@ export function SettingsModal({ open, onClose, sttProvider, onChangeProvider, in
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-[#001e50]/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 bg-[#001e50]/95" onClick={onClose} />
 
-      <div className="relative w-full max-w-lg overflow-hidden rounded-xl border border-border bg-white shadow-2xl dark:bg-[hsl(217_100%_18%)]">
+      <div className="relative w-full max-w-lg overflow-hidden rounded-xl border border-border bg-white shadow-2xl dark:border-[#1d4a96] dark:bg-[#072a66]">
         {/* Header band — TenneT dark blue */}
         <div className="tennet-header flex items-center justify-between px-6 py-4">
           <div>

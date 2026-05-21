@@ -18,12 +18,16 @@ export interface ApiKeyOverrides {
   google?: string
 }
 
+export type FormLanguage = "nl" | "en"
+
 export async function voiceToFormAction(
   audio: File,
   sttProvider: STTProvider = "elevenlabs",
   demoId: string = "medical-intake",
-  keyOverrides?: ApiKeyOverrides
+  keyOverrides?: ApiKeyOverrides,
+  language: FormLanguage = "nl"
 ) {
+  const langName = language === "nl" ? "Dutch" : "English"
   // Get the schema for the selected demo
   const demo = DEMOS.find(d => d.id === demoId)
   if (!demo) {
@@ -76,7 +80,7 @@ export async function voiceToFormAction(
       const transcriptionResult = await client.speechToText.convert({
         file,
         modelId: "scribe_v1",
-        languageCode: "en",
+        languageCode: language,
       })
 
       transcribedText = (
@@ -90,7 +94,7 @@ export async function voiceToFormAction(
         Buffer.from(audioBuffer),
         {
           model: "nova-2",
-          language: "en",
+          language: language,
           smart_format: true,
         }
       )
@@ -114,7 +118,7 @@ export async function voiceToFormAction(
             mimeType: "audio/webm",
           },
         },
-        "Transcribe this audio to text. Only return the transcription, nothing else.",
+        `Transcribe this audio to text in ${langName}. Only return the transcription, nothing else.`,
       ])
 
       transcribedText = result.response.text() || ""
@@ -202,7 +206,7 @@ Dictation: "${transcribedText}"
 Return ONLY valid JSON with these fields (omit field entirely if not mentioned):
 ${JSON.stringify(jsonTemplate, null, 2)}
 
-Important: Extract all information from the dictation. Infer context where appropriate.`
+Important: The dictation is in ${langName}. Extract all information and keep the field values written in ${langName}. Infer context where appropriate.`
 
         const result = await withTimeout(
           model.generateContent(extractionPrompt),

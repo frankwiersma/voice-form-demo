@@ -13,6 +13,7 @@ import { ThemeToggle } from "@/components/theme-toggle"
 import { SettingsModal } from "@/components/settings-modal"
 import { IpadMockup } from "@/components/ipad-mockup"
 import { getAllKeys, hasKey, type Provider } from "@/lib/apiKeys"
+import { UI, FIELD_I18N, GROUP_I18N, LANG_STORAGE_KEY, type Lang } from "@/lib/i18n"
 import {
   Form,
   FormControl,
@@ -40,10 +41,19 @@ function getMimeType(): string {
 
 // In this branch the offshore substation inspection is the only available form.
 const ACTIVE_DEMO_ID = "substation-inspection"
-const APP_TITLE = "Offshore Substation Inspection"
+
+// Group fields into compact sections so more fits on screen without scrolling.
+const FIELD_GROUPS: { title: string; fields: string[] }[] = [
+  { title: "Identification", fields: ["inspectorName", "dateTime", "substationName", "weatherConditions"] },
+  { title: "General & equipment condition", fields: ["generalImpression", "switchgearCondition", "leaksRustOverheating"] },
+  { title: "Safety & security", fields: ["safetyEquipment", "cleanlinessVegetation", "securityStatus", "unusualObservations"] },
+  { title: "Photo inspection", fields: ["imageAnomalyDetection"] },
+  { title: "Actions & sign-off", fields: ["maintenanceActions", "additionalRemarks", "recommendations", "inspectorSignature"] },
+]
 
 export default function InspectionPage() {
   const currentDemo = DEMOS.find((d) => d.id === ACTIVE_DEMO_ID) || DEMOS[0]
+  const fieldByName = Object.fromEntries(currentDemo.fields.map((f) => [f.name, f]))
 
   const [isRecording, setIsRecording] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
@@ -52,6 +62,18 @@ export default function InspectionPage() {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [settingsTab, setSettingsTab] = useState<Provider>("google")
   const [imgError, setImgError] = useState(false)
+  const [lang, setLang] = useState<Lang>("nl")
+  const t = UI[lang]
+
+  // Load + persist language preference (Dutch by default).
+  useEffect(() => {
+    const saved = localStorage.getItem(LANG_STORAGE_KEY)
+    if (saved === "nl" || saved === "en") setLang(saved)
+  }, [])
+  const changeLang = useCallback((next: Lang) => {
+    setLang(next)
+    localStorage.setItem(LANG_STORAGE_KEY, next)
+  }, [])
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const audioChunksRef = useRef<Blob[]>([])
@@ -81,7 +103,7 @@ export default function InspectionPage() {
       setError("")
       try {
         const audioFile = new File([audioBlob], "audio.webm", { type: audioBlob.type })
-        const result = await voiceToFormAction(audioFile, sttProvider, ACTIVE_DEMO_ID, getAllKeys())
+        const result = await voiceToFormAction(audioFile, sttProvider, ACTIVE_DEMO_ID, getAllKeys(), lang)
 
         if (result.data && Object.keys(result.data).length > 0) {
           const entries = Object.entries(result.data)
@@ -106,7 +128,7 @@ export default function InspectionPage() {
         setIsProcessing(false)
       }
     },
-    [form, sttProvider]
+    [form, sttProvider, lang]
   )
 
   const stopRecording = useCallback(() => {
@@ -176,12 +198,29 @@ export default function InspectionPage() {
           <div className="flex items-center gap-3">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/tennet-logo-white.png" alt="TenneT" className="h-7 w-auto" />
-            <span className="hidden text-sm font-medium text-[#a0c4e8] sm:inline">{APP_TITLE}</span>
+            <span className="hidden text-sm font-medium text-[#a0c4e8] sm:inline">{t.appTitle}</span>
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-2">
+            {/* Language switcher */}
+            <div className="flex items-center gap-0.5 rounded-full bg-white/10 p-0.5">
+              {(["nl", "en"] as const).map((l) => (
+                <button
+                  key={l}
+                  onClick={() => changeLang(l)}
+                  title={l === "nl" ? "Nederlands" : "English"}
+                  aria-pressed={lang === l}
+                  className={cn(
+                    "flex h-7 w-8 items-center justify-center rounded-full text-base leading-none transition",
+                    lang === l ? "bg-white shadow-sm" : "opacity-60 hover:opacity-100"
+                  )}
+                >
+                  <span aria-hidden>{l === "nl" ? "🇳🇱" : "🇬🇧"}</span>
+                </button>
+              ))}
+            </div>
             <button
               onClick={() => openSettings("google")}
-              title="Settings"
+              title={t.settings}
               className="rounded-md p-2 text-white/80 transition hover:bg-white/10 hover:text-white"
             >
               <Settings className="h-5 w-5" />
@@ -196,15 +235,13 @@ export default function InspectionPage() {
         <div className="grid items-center gap-8 lg:grid-cols-[1fr_minmax(360px,440px)] lg:gap-12">
           {/* Left: copy + offshore image */}
           <div className="order-2 lg:order-1">
-            <p className="text-sm font-bold uppercase tracking-wider text-[#3c8cfa]">Offshore grid · field operations</p>
+            <p className="text-sm font-bold uppercase tracking-wider text-[#3c8cfa]">{t.tagline}</p>
             <h1 className="mt-2 text-3xl font-bold leading-tight tracking-tight text-foreground sm:text-4xl">
-              {APP_TITLE}, by voice.
+              {t.appTitle}{t.headingSuffix}
             </h1>
             <div className="tennet-accent-line mt-4" />
             <p className="mt-4 max-w-xl text-base leading-relaxed text-muted-foreground">
-              Walk the platform, speak your observations, and let AI structure them into a complete
-              routine inspection report — switchgear, leaks, safety equipment, security and more.
-              Snap a photo and AI flags anomalies automatically.
+              {t.heroBody}
             </p>
 
             <figure className="mt-6 overflow-hidden rounded-xl border border-border bg-[#001e50] shadow-[0_20px_50px_-25px_rgba(0,30,80,0.6)]">
@@ -213,7 +250,7 @@ export default function InspectionPage() {
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src="/offshore-platform.png"
-                    alt="Cutaway of a TenneT offshore high-voltage substation platform"
+                    alt={t.figureAlt}
                     className="h-full w-full object-cover"
                     onError={() => setImgError(true)}
                   />
@@ -228,7 +265,7 @@ export default function InspectionPage() {
               </div>
               <figcaption className="flex items-center gap-2 border-t border-white/10 px-4 py-2.5 text-xs text-[#a0c4e8]">
                 <span className="h-1.5 w-1.5 rounded-full bg-[#ff6428]" />
-                Offshore high-voltage substation — cutaway view
+                {t.figureCaption}
               </figcaption>
             </figure>
           </div>
@@ -239,10 +276,10 @@ export default function InspectionPage() {
               <div className="px-5 pb-6 pt-6 sm:px-6">
                 {/* Form header inside the device */}
                 <div className="mb-4">
-                  <h2 className="text-lg font-bold leading-tight text-foreground">{APP_TITLE}</h2>
+                  <h2 className="text-lg font-bold leading-tight text-foreground">{t.appTitle}</h2>
                   <p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
                     {error && !isProcessing && <AlertCircle className="h-3.5 w-3.5 text-destructive" />}
-                    <span>AI-assisted voice dictation</span>
+                    <span>{t.voiceDictation}</span>
                   </p>
 
                   <button
@@ -256,36 +293,56 @@ export default function InspectionPage() {
                     )}
                   >
                     <Mic className={cn("h-4 w-4", isRecording && "animate-pulse")} />
-                    {isProcessing ? "Processing…" : isRecording ? "Stop & fill form" : "Voice fill"}
+                    {isProcessing ? t.processing : isRecording ? t.stopFill : t.voiceFill}
                   </button>
                 </div>
 
                 <Form {...form}>
                   <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                    <div className="grid grid-cols-1 gap-4">
-                      {currentDemo.fields.map((field) => (
-                        <FormField
-                          key={field.name}
-                          control={form.control}
-                          name={field.name}
-                          render={({ field: formField }) => (
-                            <FormItem>
-                              <FormLabel className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                {field.label}
-                              </FormLabel>
-                              <FormControl>
-                                {field.type === "anomaly-detector" ? (
-                                  <AnomalyDetector onDetectionComplete={(results) => formField.onChange(results)} />
-                                ) : field.type === "textarea" ? (
-                                  <Textarea placeholder={field.placeholder} {...formField} />
-                                ) : (
-                                  <Input placeholder={field.placeholder} {...formField} />
-                                )}
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                    <div className="space-y-4">
+                      {FIELD_GROUPS.map((group) => (
+                        <section key={group.title}>
+                          <div className="mb-2 flex items-center gap-2 border-t border-border pt-2.5">
+                            <span className="h-1.5 w-1.5 rounded-full bg-[#ff6428]" />
+                            <h3 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                              {GROUP_I18N[group.title]?.[lang] ?? group.title}
+                            </h3>
+                          </div>
+                          <div className="grid grid-cols-2 gap-x-3 gap-y-2.5">
+                            {group.fields.map((name) => {
+                              const field = fieldByName[name]
+                              if (!field) return null
+                              const fullWidth = field.type !== "text"
+                              const tr = FIELD_I18N[name]?.[lang]
+                              const label = tr?.label ?? field.label
+                              const placeholder = tr?.placeholder ?? field.placeholder
+                              return (
+                                <FormField
+                                  key={name}
+                                  control={form.control}
+                                  name={name}
+                                  render={({ field: formField }) => (
+                                    <FormItem className={fullWidth ? "col-span-2" : "col-span-2 sm:col-span-1"}>
+                                      <FormLabel className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                                        {label}
+                                      </FormLabel>
+                                      <FormControl>
+                                        {field.type === "anomaly-detector" ? (
+                                          <AnomalyDetector onDetectionComplete={(results) => formField.onChange(results)} />
+                                        ) : field.type === "textarea" ? (
+                                          <Textarea rows={2} placeholder={placeholder} className="min-h-[48px]" {...formField} />
+                                        ) : (
+                                          <Input placeholder={placeholder} {...formField} />
+                                        )}
+                                      </FormControl>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                              )
+                            })}
+                          </div>
+                        </section>
                       ))}
                     </div>
 
@@ -299,7 +356,7 @@ export default function InspectionPage() {
                     )}
 
                     <Button type="submit" className="h-11 w-full text-sm font-semibold uppercase tracking-wide">
-                      {currentDemo.submitButtonText}
+                      {t.submit}
                     </Button>
                   </form>
                 </Form>
