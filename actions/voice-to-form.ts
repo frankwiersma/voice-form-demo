@@ -105,7 +105,7 @@ export async function voiceToFormAction(
     } else if (sttProvider === "gemini") {
       console.log("Starting transcription with Google Gemini...")
       const genAI = new GoogleGenerativeAI(googleApiKey!)
-      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" })
+      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" })
 
       const result = await model.generateContent([
         {
