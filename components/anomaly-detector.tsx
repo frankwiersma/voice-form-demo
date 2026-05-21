@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useState, useRef } from "react"
-import { Upload, Loader2, AlertCircle, Check } from "lucide-react"
+import { Upload, Loader2, AlertCircle, Check, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { detectAnomalyAction, DetectedObject } from "@/actions/detect-anomaly"
 
@@ -17,6 +17,16 @@ export function AnomalyDetector({ onDetectionComplete }: AnomalyDetectorProps) {
   const [error, setError] = useState<string>("")
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const imageRef = useRef<HTMLImageElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const handleRemove = useCallback(() => {
+    setUploadedImage(null)
+    setDetectionResults(null)
+    setError("")
+    imageRef.current = null
+    if (fileInputRef.current) fileInputRef.current.value = ""
+    onDetectionComplete?.("")
+  }, [onDetectionComplete])
 
   const drawBoundingBoxes = useCallback((image: HTMLImageElement, objects: DetectedObject[]) => {
     const canvas = canvasRef.current
@@ -171,6 +181,7 @@ export function AnomalyDetector({ onDetectionComplete }: AnomalyDetectorProps) {
         )}
       >
         <input
+          ref={fileInputRef}
           type="file"
           accept="image/*"
           onChange={handleFileInput}
@@ -185,8 +196,11 @@ export function AnomalyDetector({ onDetectionComplete }: AnomalyDetectorProps) {
         >
           {isProcessing ? (
             <>
-              <Loader2 className="h-12 w-12 text-primary animate-spin" />
-              <p className="text-sm text-muted-foreground">Detecting anomalies...</p>
+              <Loader2 className="h-10 w-10 text-[#ff6428] animate-spin" />
+              <p className="text-sm text-muted-foreground">Detecting anomalies…</p>
+              <div className="loading-track mt-1 w-40" role="progressbar" aria-label="Detecting anomalies">
+                <div className="loading-bar" />
+              </div>
             </>
           ) : (
             <>
@@ -220,14 +234,26 @@ export function AnomalyDetector({ onDetectionComplete }: AnomalyDetectorProps) {
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <p className="text-sm font-medium">Detection Results:</p>
-            {detectionResults && (
-              <div className="flex items-center gap-1 text-sm">
-                <Check className="h-4 w-4 text-green-500" />
-                <span className="text-green-600 dark:text-green-400">
-                  {detectionResults.length} anomal{detectionResults.length === 1 ? 'y' : 'ies'} detected
-                </span>
-              </div>
-            )}
+            <div className="flex items-center gap-2 text-sm">
+              {detectionResults && (
+                <div className="flex items-center gap-1">
+                  <Check className="h-4 w-4 text-green-500" />
+                  <span className="text-green-600 dark:text-green-400">
+                    {detectionResults.length} anomal{detectionResults.length === 1 ? 'y' : 'ies'} detected
+                  </span>
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={handleRemove}
+                title="Remove image"
+                aria-label="Remove image"
+                className="flex items-center gap-1 rounded-md border border-border px-2 py-1 text-xs text-muted-foreground transition hover:border-destructive/50 hover:bg-destructive/10 hover:text-destructive"
+              >
+                <X className="h-3.5 w-3.5" />
+                Remove
+              </button>
+            </div>
           </div>
 
           <div className="relative rounded-lg overflow-hidden border bg-muted">

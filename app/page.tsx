@@ -62,6 +62,7 @@ export default function InspectionPage() {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [settingsTab, setSettingsTab] = useState<Provider>("google")
   const [imgError, setImgError] = useState(false)
+  const [anomalyKey, setAnomalyKey] = useState(0)
   const [lang, setLang] = useState<Lang>("nl")
   const t = UI[lang]
 
@@ -185,6 +186,7 @@ export default function InspectionPage() {
   const handleClear = useCallback(() => {
     form.reset(currentDemo.defaultValues)
     setError("")
+    setAnomalyKey((k) => k + 1) // remount AnomalyDetector to clear its uploaded image
   }, [form, currentDemo.defaultValues])
 
   return (
@@ -311,6 +313,12 @@ export default function InspectionPage() {
                       <Trash2 className="h-4 w-4" />
                     </button>
                   </div>
+
+                  {isProcessing && (
+                    <div className="mt-2 loading-track" role="progressbar" aria-label={t.processing}>
+                      <div className="loading-bar" />
+                    </div>
+                  )}
                 </div>
 
                 <Form {...form}>
@@ -344,7 +352,7 @@ export default function InspectionPage() {
                                       </FormLabel>
                                       <FormControl>
                                         {field.type === "anomaly-detector" ? (
-                                          <AnomalyDetector onDetectionComplete={(results) => formField.onChange(results)} />
+                                          <AnomalyDetector key={anomalyKey} onDetectionComplete={(results) => formField.onChange(results)} />
                                         ) : field.type === "textarea" ? (
                                           <Textarea rows={2} placeholder={placeholder} className="min-h-[48px]" {...formField} />
                                         ) : (
