@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
-import { AlertCircle, Settings, Mic, Trash2, Copy, Check, Lightbulb } from "lucide-react"
+import { AlertCircle, Settings, Mic, Trash2, Copy, Check, Lightbulb, Bot } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { voiceToFormAction, STTProvider } from "@/actions/voice-to-form"
@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { SettingsModal } from "@/components/settings-modal"
 import { IpadMockup } from "@/components/ipad-mockup"
+import { VoiceAgent } from "@/components/voice-agent"
 import { getAllKeys, hasKey, type Provider } from "@/lib/apiKeys"
 import { UI, FIELD_I18N, GROUP_I18N, EXAMPLE_SCRIPT, LANG_STORAGE_KEY, type Lang } from "@/lib/i18n"
 import {
@@ -67,6 +68,7 @@ export default function InspectionPage() {
   const [scriptLen, setScriptLen] = useState<"short" | "long">("long")
   const [expanded, setExpanded] = useState(false)
   const [panelOpen, setPanelOpen] = useState(false)
+  const [agentOpen, setAgentOpen] = useState(false)
   const [lang, setLang] = useState<Lang>("nl")
   const t = UI[lang]
 
@@ -266,6 +268,27 @@ export default function InspectionPage() {
         onChangeProvider={setSttProvider}
         initialProvider={settingsTab}
       />
+
+      <VoiceAgent
+        open={agentOpen}
+        onClose={() => setAgentOpen(false)}
+        onNeedKey={() => {
+          setAgentOpen(false)
+          openSettings("deepgram")
+        }}
+        lang={lang}
+      />
+
+      {/* Floating "Talk to Tenny" button */}
+      <button
+        onClick={() => setAgentOpen(true)}
+        className="group fixed bottom-5 right-5 z-40 flex items-center gap-2 rounded-full bg-[#003584] py-3 pl-3 pr-4 text-sm font-semibold text-white shadow-[0_12px_30px_-8px_rgba(0,53,132,0.7)] transition hover:bg-[#3c8cfa]"
+      >
+        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#ff6428]">
+          <Bot className="h-4 w-4" />
+        </span>
+        {t.agentButton}
+      </button>
 
       {/* Header band */}
       <header className="tennet-header sticky top-0 z-30">

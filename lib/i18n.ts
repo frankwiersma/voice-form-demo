@@ -24,6 +24,7 @@ export const UI: Record<Lang, {
   copied: string
   scriptShort: string
   scriptLong: string
+  agentButton: string
 }> = {
   nl: {
     appTitle: "Offshore Onderstation-inspectie",
@@ -47,6 +48,7 @@ export const UI: Record<Lang, {
     copied: "Gekopieerd",
     scriptShort: "Kort",
     scriptLong: "Lang",
+    agentButton: "Praat met Tenny",
   },
   en: {
     appTitle: "Offshore Substation Inspection",
@@ -70,6 +72,7 @@ export const UI: Record<Lang, {
     copied: "Copied",
     scriptShort: "Short",
     scriptLong: "Long",
+    agentButton: "Talk to Tenny",
   },
 }
 
