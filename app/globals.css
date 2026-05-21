@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+/* Bind Tailwind's `dark:` variant to the .dark class (set by next-themes),
+   instead of the default prefers-color-scheme media query. Keeps dark: utilities
+   in sync with the CSS-variable theme that also flips on .dark. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /*
   TenneT brand theme.
   Tokens are HSL triplets consumed via hsl(var(--color-x)) in tailwind.config.ts.
