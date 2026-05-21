@@ -334,7 +334,7 @@ export default function InspectionPage() {
           <div className="order-2 lg:order-1">
             <p className="text-sm font-bold uppercase tracking-wider text-[#3c8cfa]">{t.tagline}</p>
             <h1 className="mt-2 text-3xl font-bold leading-tight tracking-tight text-foreground sm:text-4xl">
-              {t.appTitle}{t.headingSuffix}
+              {t.heroHeading}
             </h1>
             <div className="tennet-accent-line mt-4" />
             <p className="mt-4 max-w-xl text-base leading-relaxed text-muted-foreground">

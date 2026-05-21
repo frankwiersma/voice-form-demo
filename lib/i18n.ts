@@ -7,6 +7,7 @@ export const UI: Record<Lang, {
   appTitle: string
   tagline: string
   headingSuffix: string
+  heroHeading: string
   heroBody: string
   figureCaption: string
   figureAlt: string
@@ -29,10 +30,11 @@ export const UI: Record<Lang, {
 }> = {
   nl: {
     appTitle: "Offshore Onderstation-inspectie",
-    tagline: "Offshore net · veldwerkzaamheden",
+    tagline: "Offshore veldwerk · met GenAI",
     headingSuffix: ", met je stem.",
+    heroHeading: "Inspecteren én overleggen — handsfree, met je stem.",
     heroBody:
-      "Loop over het platform, spreek je waarnemingen in en laat AI er een volledig routine-inspectierapport van maken — schakelinstallatie, lekkages, veiligheidsuitrusting, beveiliging en meer. Maak een foto en AI markeert automatisch afwijkingen.",
+      "Loop over het platform en spreek je waarnemingen in: AI maakt er een volledig inspectierapport van — schakelinstallatie, lekkages, veiligheid, beveiliging — en markeert afwijkingen op je foto's. Twijfel je over een meting of wil je advies? Overleg direct met Tenny, je spraakassistent, die meedenkt over veiligheid en meteen een incidentrapport opstelt.",
     figureCaption: "Offshore hoogspanningsonderstation — doorsnede",
     figureAlt: "Doorsnede van een TenneT offshore hoogspanningsonderstation",
     voiceDictation: "AI-ondersteunde spraakinvoer",
@@ -55,10 +57,11 @@ export const UI: Record<Lang, {
   },
   en: {
     appTitle: "Offshore Substation Inspection",
-    tagline: "Offshore grid · field operations",
+    tagline: "Offshore field work · with GenAI",
     headingSuffix: ", by voice.",
+    heroHeading: "Inspect and consult — hands-free, by voice.",
     heroBody:
-      "Walk the platform, speak your observations, and let AI structure them into a complete routine inspection report — switchgear, leaks, safety equipment, security and more. Snap a photo and AI flags anomalies automatically.",
+      "Walk the platform and speak your observations: AI turns them into a complete inspection report — switchgear, leaks, safety, security — and flags anomalies in your photos. Unsure about a reading, or want advice? Talk it through with Tenny, your voice assistant, who watches safety and drafts the incident report on the spot.",
     figureCaption: "Offshore high-voltage substation — cutaway view",
     figureAlt: "Cutaway of a TenneT offshore high-voltage substation platform",
     voiceDictation: "AI-assisted voice dictation",
