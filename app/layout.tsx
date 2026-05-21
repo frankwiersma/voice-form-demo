@@ -1,13 +1,11 @@
 import type { Metadata } from "next"
-import { Inter } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 
-const inter = Inter({ subsets: ["latin"] })
-
 export const metadata: Metadata = {
-  title: "Doctor Voice Form",
-  description: "Doctor patient intake form with voice dictation powered by ElevenLabs Scribe",
+  title: "TenneT · Voice Inspection",
+  description:
+    "AI-assisted offshore substation inspection — fill the report by voice. Powered by TenneT.",
 }
 
 export default function RootLayout({
@@ -17,10 +15,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
+      <body>
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
+          defaultTheme="light"
           enableSystem
           disableTransitionOnChange
         >

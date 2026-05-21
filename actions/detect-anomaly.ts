@@ -2,15 +2,6 @@
 
 import { fal } from "@fal-ai/client"
 
-// Configure fal.ai client
-if (!process.env.FAL_KEY) {
-  throw new Error("FAL_KEY environment variable is not set")
-}
-
-fal.config({
-  credentials: process.env.FAL_KEY
-})
-
 export interface DetectedObject {
   x_min: number
   y_min: number
@@ -38,6 +29,12 @@ export async function detectAnomalyAction(
     if (!imageDataOrUrl) {
       return { error: "No image provided" }
     }
+
+    if (!process.env.FAL_KEY) {
+      return { error: "FAL_KEY is not configured. Add it to .env.local to enable image anomaly detection." }
+    }
+
+    fal.config({ credentials: process.env.FAL_KEY })
 
     console.log("Starting anomaly detection with fal.ai...")
     console.log("Prompt:", prompt)
