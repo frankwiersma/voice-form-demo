@@ -206,7 +206,15 @@ Dictation: "${transcribedText}"
 Return ONLY valid JSON with these fields (omit field entirely if not mentioned):
 ${JSON.stringify(jsonTemplate, null, 2)}
 
-Important: The dictation is in ${langName}. Extract all information and keep the field values written in ${langName}. Infer context where appropriate.`
+The dictation is in ${langName}. Keep descriptive text in ${langName}.
+
+NORMALIZE spoken quantities into clean, conventional written form (do NOT keep the literal spoken words for these):
+- Times → 24-hour "HH:MM". E.g. "kwart over twee 's middags" → "14:15"; "half negen 's ochtends" → "08:30". Drop the spoken part-of-day ("'s middags").
+- Dates → "YYYY-MM-DD". If a field gets both a date and a time, combine as "YYYY-MM-DD HH:MM".
+- Temperatures → number with degree sign and unit, e.g. "14 °C". If the speaker is approximate ("een graad of 14", "rond de 14", "ongeveer 14 graden", "about 14") prefix with "~", e.g. "~14 °C".
+- Other measurements → keep the number with a conventional unit (e.g. "20 knopen", "5 bar", "≈3 m").
+
+DO NOT over-interpret: only normalize numbers, dates, times and units. Never invent severity, diagnoses, causes, or any detail that was not actually spoken. When something is vague or qualitative, keep the speaker's own wording.`
 
         const result = await withTimeout(
           model.generateContent(extractionPrompt),
