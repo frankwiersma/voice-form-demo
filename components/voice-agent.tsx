@@ -68,45 +68,45 @@ const AGENT_EXAMPLES: Record<Lang, string[]> = {
 
 const STR: Record<Lang, Record<string, string>> = {
   nl: {
-    title: "Tenny — spraakassistent",
-    subtitle: "Offshore onderhoudsondersteuning",
+    title: "Tenny",
+    subtitle: "Offshore onderhoudsassistent",
     start: "Gesprek starten",
     stop: "Beëindigen",
     connecting: "Verbinden…",
     listening: "Luistert…",
     speaking: "Tenny spreekt…",
     needKey: "Stel eerst je Deepgram-sleutel in via Instellingen.",
-    openSettings: "Open instellingen",
     hint: "Praat hands-free met Tenny over je inspectie. Spreek Nederlands, Engels of Duits.",
     micDenied: "Microfoontoegang geweigerd.",
     you: "Jij",
     examples: "Probeer bijvoorbeeld te zeggen",
+    close: "Terug naar formulier",
   },
   en: {
-    title: "Tenny — voice assistant",
-    subtitle: "Offshore maintenance support",
+    title: "Tenny",
+    subtitle: "Offshore maintenance assistant",
     start: "Start conversation",
     stop: "End",
     connecting: "Connecting…",
     listening: "Listening…",
     speaking: "Tenny is speaking…",
     needKey: "Set your Deepgram key in Settings first.",
-    openSettings: "Open settings",
     hint: "Talk hands-free with Tenny about your inspection. Speak Dutch, English or German.",
     micDenied: "Microphone permission denied.",
     you: "You",
     examples: "Try saying, for example",
+    close: "Back to form",
   },
 }
 
 interface Props {
-  open: boolean
   onClose: () => void
   onNeedKey: () => void
   lang: Lang
 }
 
-export function VoiceAgent({ open, onClose, onNeedKey, lang }: Props) {
+/** Inline conversation panel — designed to fill the iPad screen in fullscreen. */
+export function VoiceAgentPanel({ onClose, onNeedKey, lang }: Props) {
   const t = STR[lang]
   const [status, setStatus] = useState<Status>("idle")
   const [error, setError] = useState("")
@@ -185,7 +185,6 @@ export function VoiceAgent({ open, onClose, onNeedKey, lang }: Props) {
     playCtxRef.current = playCtx
     nextPlayRef.current = 0
 
-    // Prefer a short-lived server token; fall back to the BYOK key (sent to Deepgram directly).
     let protocols: string[] = ["token", key]
     try {
       const r = await fetch("/api/deepgram-token", { method: "POST" })
@@ -316,16 +315,12 @@ export function VoiceAgent({ open, onClose, onNeedKey, lang }: Props) {
     }, 8000)
   }, [onNeedKey, t.micDenied])
 
-  // auto-scroll transcript
   useEffect(() => {
     transcriptRef.current?.scrollTo({ top: transcriptRef.current.scrollHeight, behavior: "smooth" })
-  }, [turns])
+  }, [turns, agentSpeaking])
 
-  // stop when the modal closes / unmounts
-  useEffect(() => {
-    if (!open) stop()
-    return () => stop()
-  }, [open, stop])
+  // stop everything when the panel unmounts
+  useEffect(() => () => stop(), [stop])
 
   const sayExample = (text: string) => {
     if (status === "live" && wsRef.current?.readyState === WebSocket.OPEN) {
@@ -335,58 +330,58 @@ export function VoiceAgent({ open, onClose, onNeedKey, lang }: Props) {
     }
   }
 
-  if (!open) return null
-
   const live = status === "live"
   const statusLabel =
     status === "connecting" ? t.connecting : agentSpeaking ? t.speaking : live ? t.listening : ""
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-[#001e50]/95" onClick={onClose} />
+    <div className="flex h-full flex-col">
+      {/* Header */}
+      <div className="tennet-header flex shrink-0 items-center gap-3 px-4 py-3 pr-14">
+        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/15">
+          <Bot className="h-5 w-5 text-white" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <h2 className="text-sm font-bold text-white">{t.title}</h2>
+          <p className="truncate text-xs text-[#a0c4e8]">{t.subtitle}</p>
+        </div>
+        <button
+          onClick={onClose}
+          title={t.close}
+          aria-label={t.close}
+          className="rounded-md p-1.5 text-white/70 transition hover:bg-white/10 hover:text-white"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
 
-      <div className="relative flex h-[80vh] max-h-[640px] w-full max-w-md flex-col overflow-hidden rounded-xl border border-border bg-white shadow-2xl dark:border-[#1d4a96] dark:bg-[#072a66]">
-        {/* Header */}
-        <div className="tennet-header flex items-center justify-between px-5 py-4">
-          <div className="flex items-center gap-3">
-            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/15">
-              <Bot className="h-5 w-5 text-white" />
-            </span>
-            <div>
-              <h2 className="text-sm font-bold text-white">{t.title}</h2>
-              <p className="text-xs text-[#a0c4e8]">{t.subtitle}</p>
+      {/* Transcript */}
+      <div ref={transcriptRef} className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
+        {turns.length === 0 && (
+          <div className="pt-2">
+            <p className="text-center text-sm text-muted-foreground">{t.hint}</p>
+            <p className="mb-2 mt-5 text-center text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+              {t.examples}
+            </p>
+            <div className="mx-auto flex max-w-md flex-col gap-2">
+              {AGENT_EXAMPLES[lang].map((ex, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => sayExample(ex)}
+                  title={live ? ex : t.start}
+                  className="rounded-xl border border-border bg-card px-3 py-2 text-left text-sm text-foreground transition hover:border-[#3c8cfa] hover:bg-accent"
+                >
+                  <span className="text-[#ff6428]">“</span>
+                  {ex}
+                  <span className="text-[#ff6428]">”</span>
+                </button>
+              ))}
             </div>
           </div>
-          <button onClick={onClose} className="rounded-md p-1.5 text-white/70 transition hover:bg-white/10 hover:text-white">
-            <X className="h-4 w-4" />
-          </button>
-        </div>
+        )}
 
-        {/* Transcript */}
-        <div ref={transcriptRef} className="flex-1 space-y-3 overflow-y-auto px-5 py-4">
-          {turns.length === 0 && (
-            <div className="pt-2">
-              <p className="text-center text-sm text-muted-foreground">{t.hint}</p>
-              <p className="mb-2 mt-5 text-center text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-                {t.examples}
-              </p>
-              <div className="flex flex-col gap-2">
-                {AGENT_EXAMPLES[lang].map((ex, i) => (
-                  <button
-                    key={i}
-                    type="button"
-                    onClick={() => sayExample(ex)}
-                    title={live ? ex : t.start}
-                    className="rounded-xl border border-border bg-card px-3 py-2 text-left text-sm text-foreground transition hover:border-[#3c8cfa] hover:bg-accent"
-                  >
-                    <span className="text-[#ff6428]">“</span>
-                    {ex}
-                    <span className="text-[#ff6428]">”</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
+        <div className="mx-auto w-full max-w-2xl space-y-3">
           {turns.map((turn, i) => {
             const isUser = turn.role === "user"
             return (
@@ -429,7 +424,6 @@ export function VoiceAgent({ open, onClose, onNeedKey, lang }: Props) {
             )
           })}
 
-          {/* live "speaking" bubble while Tenny talks */}
           {agentSpeaking && turns[turns.length - 1]?.role !== "assistant" && (
             <div className="flex items-end gap-2">
               <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#ff6428] text-white shadow-sm ring-2 ring-white/70 dark:ring-white/10">
@@ -443,24 +437,26 @@ export function VoiceAgent({ open, onClose, onNeedKey, lang }: Props) {
             </div>
           )}
         </div>
+      </div>
 
-        {/* Status + controls */}
-        <div className="border-t border-border px-5 py-4">
-          {error && <p className="mb-2 text-center text-sm text-destructive">{error}</p>}
-          {statusLabel && !error && (
-            <p className="mb-2 flex items-center justify-center gap-2 text-xs font-medium text-muted-foreground">
-              {agentSpeaking ? (
-                <AudioLines className="h-3.5 w-3.5 text-[#3c8cfa]" />
-              ) : (
-                <span className="relative flex h-2 w-2">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#ff6428] opacity-75" />
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-[#ff6428]" />
-                </span>
-              )}
-              {statusLabel}
-            </p>
-          )}
+      {/* Status + controls */}
+      <div className="shrink-0 border-t border-border px-4 py-4">
+        {error && <p className="mb-2 text-center text-sm text-destructive">{error}</p>}
+        {statusLabel && !error && (
+          <p className="mb-2 flex items-center justify-center gap-2 text-xs font-medium text-muted-foreground">
+            {agentSpeaking ? (
+              <AudioLines className="h-3.5 w-3.5 text-[#3c8cfa]" />
+            ) : (
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#ff6428] opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-[#ff6428]" />
+              </span>
+            )}
+            {statusLabel}
+          </p>
+        )}
 
+        <div className="mx-auto max-w-md">
           {!live && status !== "connecting" ? (
             <button
               onClick={start}

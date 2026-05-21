@@ -25,6 +25,7 @@ export const UI: Record<Lang, {
   scriptShort: string
   scriptLong: string
   agentButton: string
+  showcase: string
 }> = {
   nl: {
     appTitle: "Offshore Onderstation-inspectie",
@@ -49,6 +50,8 @@ export const UI: Record<Lang, {
     scriptShort: "Kort",
     scriptLong: "Lang",
     agentButton: "Praat met Tenny",
+    showcase:
+      "Een kijkje in hoe GenAI het dagelijks werk handiger maakt. Het spraakformulier en de gespreksassistent zijn slechts twee van de vele mogelijkheden.",
   },
   en: {
     appTitle: "Offshore Substation Inspection",
@@ -73,6 +76,8 @@ export const UI: Record<Lang, {
     scriptShort: "Short",
     scriptLong: "Long",
     agentButton: "Talk to Tenny",
+    showcase:
+      "A look at how GenAI makes everyday work more convenient. The voice form and the conversational assistant are just two of many possibilities.",
   },
 }
 

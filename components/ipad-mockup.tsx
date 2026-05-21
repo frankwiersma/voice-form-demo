@@ -16,6 +16,8 @@ interface IpadMockupProps {
   onExpandedChange: (v: boolean) => void
   /** controlled side-panel state */
   panelOpen: boolean
+  /** hide the built-in fullscreen toggle (e.g. when an inner panel owns the close control) */
+  hideExpandButton?: boolean
 }
 
 /**
@@ -36,6 +38,7 @@ export function IpadMockup({
   expanded,
   onExpandedChange,
   panelOpen,
+  hideExpandButton,
 }: IpadMockupProps) {
   React.useEffect(() => {
     document.body.style.overflow = expanded ? "hidden" : ""
@@ -79,18 +82,20 @@ export function IpadMockup({
             <div className="ipad-gloss" />
 
             {/* fullscreen toggle — on the iPad screen itself, top-right */}
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation()
-                onExpandedChange(!expanded)
-              }}
-              aria-label={expanded ? "Exit fullscreen" : "Expand"}
-              title={expanded ? "Exit fullscreen" : "Fullscreen"}
-              className="absolute right-3 top-3 z-30 flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-card/85 text-muted-foreground shadow-sm backdrop-blur transition hover:bg-accent hover:text-foreground"
-            >
-              {expanded ? <Minimize2 className="h-[18px] w-[18px]" /> : <Maximize2 className="h-[18px] w-[18px]" />}
-            </button>
+            {!hideExpandButton && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onExpandedChange(!expanded)
+                }}
+                aria-label={expanded ? "Exit fullscreen" : "Expand"}
+                title={expanded ? "Exit fullscreen" : "Fullscreen"}
+                className="absolute right-3 top-3 z-30 flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-card/85 text-muted-foreground shadow-sm backdrop-blur transition hover:bg-accent hover:text-foreground"
+              >
+                {expanded ? <Minimize2 className="h-[18px] w-[18px]" /> : <Maximize2 className="h-[18px] w-[18px]" />}
+              </button>
+            )}
 
             <div
               onClick={(e) => e.stopPropagation()}

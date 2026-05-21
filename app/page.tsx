@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { SettingsModal } from "@/components/settings-modal"
 import { IpadMockup } from "@/components/ipad-mockup"
-import { VoiceAgent } from "@/components/voice-agent"
+import { VoiceAgentPanel } from "@/components/voice-agent"
 import { getAllKeys, hasKey, type Provider } from "@/lib/apiKeys"
 import { UI, FIELD_I18N, GROUP_I18N, EXAMPLE_SCRIPT, LANG_STORAGE_KEY, type Lang } from "@/lib/i18n"
 import {
@@ -68,7 +68,7 @@ export default function InspectionPage() {
   const [scriptLen, setScriptLen] = useState<"short" | "long">("long")
   const [expanded, setExpanded] = useState(false)
   const [panelOpen, setPanelOpen] = useState(false)
-  const [agentOpen, setAgentOpen] = useState(false)
+  const [agentMode, setAgentMode] = useState(false)
   const [lang, setLang] = useState<Lang>("nl")
   const t = UI[lang]
 
@@ -197,7 +197,16 @@ export default function InspectionPage() {
 
   const handleExpandedChange = useCallback((v: boolean) => {
     setExpanded(v)
-    if (!v) setPanelOpen(false)
+    if (!v) {
+      setPanelOpen(false)
+      setAgentMode(false)
+    }
+  }, [])
+
+  const openAgent = useCallback(() => {
+    setPanelOpen(false)
+    setAgentMode(true)
+    setExpanded(true)
   }, [])
 
   const toggleScript = useCallback(() => {
@@ -269,19 +278,9 @@ export default function InspectionPage() {
         initialProvider={settingsTab}
       />
 
-      <VoiceAgent
-        open={agentOpen}
-        onClose={() => setAgentOpen(false)}
-        onNeedKey={() => {
-          setAgentOpen(false)
-          openSettings("deepgram")
-        }}
-        lang={lang}
-      />
-
-      {/* Floating "Talk to Tenny" button */}
+      {/* Floating "Talk to Tenny" button — opens the iPad in fullscreen and runs the conversation on it */}
       <button
-        onClick={() => setAgentOpen(true)}
+        onClick={openAgent}
         className="group fixed bottom-5 right-5 z-40 flex items-center gap-2 rounded-full bg-[#003584] py-3 pl-3 pr-4 text-sm font-semibold text-white shadow-[0_12px_30px_-8px_rgba(0,53,132,0.7)] transition hover:bg-[#3c8cfa]"
       >
         <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#ff6428]">
@@ -342,6 +341,14 @@ export default function InspectionPage() {
               {t.heroBody}
             </p>
 
+            <div className="mt-5 flex max-w-xl items-start gap-3 rounded-xl border border-border bg-card/60 p-3.5">
+              <span className="mt-0.5 inline-flex items-center gap-1 rounded-md bg-[#ff6428]/10 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-[#ff6428]">
+                <Bot className="h-3.5 w-3.5" />
+                GenAI
+              </span>
+              <p className="text-sm leading-relaxed text-muted-foreground">{t.showcase}</p>
+            </div>
+
             <figure className="mt-6 overflow-hidden rounded-xl border border-border bg-[#001e50] shadow-[0_20px_50px_-25px_rgba(0,30,80,0.6)]">
               <div className="relative aspect-[16/13] w-full">
                 {!imgError ? (
@@ -372,11 +379,22 @@ export default function InspectionPage() {
           <div className="order-1 mx-auto w-full max-w-[440px] lg:order-2 lg:sticky lg:top-20 lg:self-start">
             <IpadMockup
               screenClassName="max-h-[74vh]"
-              sidePanel={scriptPanel}
+              sidePanel={agentMode ? undefined : scriptPanel}
               expanded={expanded}
               onExpandedChange={handleExpandedChange}
               panelOpen={panelOpen}
+              hideExpandButton={agentMode}
             >
+              {agentMode ? (
+                <VoiceAgentPanel
+                  lang={lang}
+                  onClose={() => handleExpandedChange(false)}
+                  onNeedKey={() => {
+                    handleExpandedChange(false)
+                    openSettings("deepgram")
+                  }}
+                />
+              ) : (
               <div className="px-5 pb-6 pt-6 sm:px-6">
                 {/* Form header inside the device */}
                 <div className="mb-4 pr-10">
@@ -502,6 +520,7 @@ export default function InspectionPage() {
                   </form>
                 </Form>
               </div>
+              )}
             </IpadMockup>
           </div>
         </div>
