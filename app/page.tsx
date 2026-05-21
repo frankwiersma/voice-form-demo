@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
-import { AlertCircle, Settings, Mic } from "lucide-react"
+import { AlertCircle, Settings, Mic, Trash2 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { voiceToFormAction, STTProvider } from "@/actions/voice-to-form"
@@ -287,19 +287,30 @@ export default function InspectionPage() {
                     <span>{t.voiceDictation}</span>
                   </p>
 
-                  <button
-                    type="button"
-                    onClick={handleVoiceToggle}
-                    disabled={isProcessing}
-                    className={cn(
-                      "mt-3 flex w-full items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-semibold uppercase tracking-wide text-white transition-all",
-                      isRecording ? "bg-[#ff6428]" : "bg-primary hover:bg-[#3c8cfa]",
-                      isProcessing && "cursor-not-allowed opacity-70"
-                    )}
-                  >
-                    <Mic className={cn("h-4 w-4", isRecording && "animate-pulse")} />
-                    {isProcessing ? t.processing : isRecording ? t.stopFill : t.voiceFill}
-                  </button>
+                  <div className="mt-3 flex gap-2">
+                    <button
+                      type="button"
+                      onClick={handleVoiceToggle}
+                      disabled={isProcessing}
+                      className={cn(
+                        "flex h-11 flex-1 items-center justify-center gap-2 rounded-lg px-4 text-sm font-semibold uppercase tracking-wide text-white transition-all",
+                        isRecording ? "bg-[#c84a1c]" : "bg-[#ff6428] hover:bg-[#e85718]",
+                        isProcessing && "cursor-not-allowed opacity-70"
+                      )}
+                    >
+                      <Mic className={cn("h-4 w-4", isRecording && "animate-pulse")} />
+                      {isProcessing ? t.processing : isRecording ? t.stopFill : t.voiceFill}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleClear}
+                      title={t.clearForm}
+                      aria-label={t.clearForm}
+                      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-border text-muted-foreground transition hover:border-destructive/50 hover:bg-destructive/10 hover:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
 
                 <Form {...form}>
@@ -360,19 +371,9 @@ export default function InspectionPage() {
                       </div>
                     )}
 
-                    <div className="flex gap-2">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={handleClear}
-                        className="h-11 text-sm font-medium"
-                      >
-                        {t.clearForm}
-                      </Button>
-                      <Button type="submit" className="h-11 flex-1 text-sm font-semibold uppercase tracking-wide">
-                        {t.submit}
-                      </Button>
-                    </div>
+                    <Button type="submit" className="h-11 w-full text-sm font-semibold uppercase tracking-wide">
+                      {t.submit}
+                    </Button>
                   </form>
                 </Form>
               </div>
