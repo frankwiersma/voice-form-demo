@@ -182,6 +182,11 @@ export default function InspectionPage() {
     alert("Inspection report submitted! Check console for data.")
   }
 
+  const handleClear = useCallback(() => {
+    form.reset(currentDemo.defaultValues)
+    setError("")
+  }, [form, currentDemo.defaultValues])
+
   return (
     <div className="tennet-page-bg min-h-screen">
       <SettingsModal
@@ -355,9 +360,19 @@ export default function InspectionPage() {
                       </div>
                     )}
 
-                    <Button type="submit" className="h-11 w-full text-sm font-semibold uppercase tracking-wide">
-                      {t.submit}
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={handleClear}
+                        className="h-11 text-sm font-medium"
+                      >
+                        {t.clearForm}
+                      </Button>
+                      <Button type="submit" className="h-11 flex-1 text-sm font-semibold uppercase tracking-wide">
+                        {t.submit}
+                      </Button>
+                    </div>
                   </form>
                 </Form>
               </div>

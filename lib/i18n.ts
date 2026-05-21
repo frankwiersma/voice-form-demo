@@ -15,6 +15,7 @@ export const UI: Record<Lang, {
   processing: string
   stopFill: string
   submit: string
+  clearForm: string
   settings: string
   toggleTheme: string
 }> = {
@@ -31,6 +32,7 @@ export const UI: Record<Lang, {
     processing: "Bezig…",
     stopFill: "Stop & vul formulier",
     submit: "Inspectierapport indienen",
+    clearForm: "Formulier wissen",
     settings: "Instellingen",
     toggleTheme: "Thema wisselen",
   },
@@ -47,6 +49,7 @@ export const UI: Record<Lang, {
     processing: "Processing…",
     stopFill: "Stop & fill form",
     submit: "Submit Inspection Report",
+    clearForm: "Clear form",
     settings: "Settings",
     toggleTheme: "Toggle theme",
   },
