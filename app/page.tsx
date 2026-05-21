@@ -65,6 +65,8 @@ export default function InspectionPage() {
   const [anomalyKey, setAnomalyKey] = useState(0)
   const [copied, setCopied] = useState(false)
   const [scriptLen, setScriptLen] = useState<"short" | "long">("long")
+  const [expanded, setExpanded] = useState(false)
+  const [panelOpen, setPanelOpen] = useState(false)
   const [lang, setLang] = useState<Lang>("nl")
   const t = UI[lang]
 
@@ -190,6 +192,20 @@ export default function InspectionPage() {
     setError("")
     setAnomalyKey((k) => k + 1) // remount AnomalyDetector to clear its uploaded image
   }, [form, currentDemo.defaultValues])
+
+  const handleExpandedChange = useCallback((v: boolean) => {
+    setExpanded(v)
+    if (!v) setPanelOpen(false)
+  }, [])
+
+  const toggleScript = useCallback(() => {
+    if (!expanded) {
+      setExpanded(true)
+      setPanelOpen(true)
+    } else {
+      setPanelOpen((p) => !p)
+    }
+  }, [expanded])
 
   const copyScript = useCallback(() => {
     navigator.clipboard?.writeText(EXAMPLE_SCRIPT[lang][scriptLen]).then(() => {
@@ -331,11 +347,37 @@ export default function InspectionPage() {
 
           {/* Right: form inside iPad */}
           <div className="order-1 mx-auto w-full max-w-[440px] lg:order-2 lg:sticky lg:top-20 lg:self-start">
-            <IpadMockup screenClassName="max-h-[74vh]" sidePanel={scriptPanel}>
+            <IpadMockup
+              screenClassName="max-h-[74vh]"
+              sidePanel={scriptPanel}
+              expanded={expanded}
+              onExpandedChange={handleExpandedChange}
+              panelOpen={panelOpen}
+            >
               <div className="px-5 pb-6 pt-6 sm:px-6">
                 {/* Form header inside the device */}
-                <div className="mb-4">
-                  <h2 className="text-lg font-bold leading-tight text-foreground">{t.appTitle}</h2>
+                <div className="mb-4 pr-10">
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-lg font-bold leading-tight text-foreground">{t.appTitle}</h2>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        toggleScript()
+                      }}
+                      title={t.scriptTitle}
+                      aria-label={t.scriptTitle}
+                      aria-pressed={expanded && panelOpen}
+                      className={cn(
+                        "flex h-7 w-7 shrink-0 items-center justify-center rounded-full border transition",
+                        expanded && panelOpen
+                          ? "border-[#ff6428] bg-[#ff6428] text-white"
+                          : "border-[#ff6428]/50 text-[#ff6428] hover:bg-[#ff6428]/10"
+                      )}
+                    >
+                      <Lightbulb className="h-4 w-4" />
+                    </button>
+                  </div>
                   <p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
                     {error && !isProcessing && <AlertCircle className="h-3.5 w-3.5 text-destructive" />}
                     <span>{t.voiceDictation}</span>

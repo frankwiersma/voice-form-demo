@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Maximize2, Minimize2, Lightbulb } from "lucide-react"
+import { Maximize2, Minimize2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface IpadMockupProps {
@@ -9,50 +9,55 @@ interface IpadMockupProps {
   className?: string
   /** max height of the screen viewport while docked; content scrolls inside */
   screenClassName?: string
-  /** optional content shown in a slide-out panel (only in fullscreen, via the lightbulb) */
+  /** optional content shown in a slide-out panel (only in fullscreen) */
   sidePanel?: React.ReactNode
+  /** controlled fullscreen state */
+  expanded: boolean
+  onExpandedChange: (v: boolean) => void
+  /** controlled side-panel state */
+  panelOpen: boolean
 }
 
 /**
  * Realistic, glossy iPad device frame. Children render inside the screen,
  * which scrolls internally. Clicking the device (bezel) animates it to a
- * near-fullscreen overlay. In fullscreen, a lightbulb button slides a side
- * panel out to the left and shifts the iPad to the right.
+ * near-fullscreen overlay. In fullscreen, an open side panel slides out to the
+ * left and shifts the iPad to the right. Fullscreen + panel are controlled by
+ * the parent so a button next to the form title can drive them.
  *
- * The DOM structure is kept stable across docked/fullscreen (only classes
- * change) so the form and any child state are preserved.
+ * The DOM structure stays stable across docked/fullscreen (only classes change)
+ * so the form and any child state are preserved.
  */
-export function IpadMockup({ children, className, screenClassName, sidePanel }: IpadMockupProps) {
-  const [expanded, setExpanded] = React.useState(false)
-  const [panelOpen, setPanelOpen] = React.useState(false)
-
+export function IpadMockup({
+  children,
+  className,
+  screenClassName,
+  sidePanel,
+  expanded,
+  onExpandedChange,
+  panelOpen,
+}: IpadMockupProps) {
   React.useEffect(() => {
     document.body.style.overflow = expanded ? "hidden" : ""
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setExpanded(false)
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onExpandedChange(false)
     window.addEventListener("keydown", onKey)
     return () => {
       document.body.style.overflow = ""
       window.removeEventListener("keydown", onKey)
     }
-  }, [expanded])
-
-  // reset the side panel whenever we leave fullscreen
-  React.useEffect(() => {
-    if (!expanded) setPanelOpen(false)
-  }, [expanded])
+  }, [expanded, onExpandedChange])
 
   return (
     <>
-      {/* translucent backdrop — app stays faintly visible behind */}
       <div
         className={cn("ipad-backdrop", expanded ? "ipad-backdrop--show" : "pointer-events-none opacity-0")}
         aria-hidden
       />
 
-      {/* stage: a no-op (display:contents) while docked, a fixed centered flex row in fullscreen */}
+      {/* stage: display:contents while docked, fixed centered flex row in fullscreen */}
       <div
         className={expanded ? "ipad-stage" : "contents"}
-        onClick={() => expanded && setExpanded(false)}
+        onClick={() => expanded && onExpandedChange(false)}
       >
         {sidePanel && (
           <aside
@@ -66,43 +71,27 @@ export function IpadMockup({ children, className, screenClassName, sidePanel }: 
         <div
           className={cn("ipad-frame", expanded ? "ipad-frame--expanded" : "w-full cursor-zoom-in", className)}
           onClick={(e) => {
-            if (!expanded) setExpanded(true)
+            if (!expanded) onExpandedChange(true)
             else e.stopPropagation()
           }}
         >
-          {/* lightbulb — only in fullscreen, toggles the side panel */}
-          {expanded && sidePanel && (
+          <div className={cn("ipad-screen", expanded && "h-full")}>
+            <div className="ipad-gloss" />
+
+            {/* fullscreen toggle — on the iPad screen itself, top-right */}
             <button
               type="button"
               onClick={(e) => {
                 e.stopPropagation()
-                setPanelOpen((v) => !v)
+                onExpandedChange(!expanded)
               }}
-              aria-label="Toggle example script"
-              aria-pressed={panelOpen}
-              className={cn(
-                "absolute left-4 top-1.5 z-30 rounded-full p-1 backdrop-blur transition",
-                panelOpen ? "bg-[#ff6428] text-white" : "bg-white/15 text-white/80 hover:bg-white/30 hover:text-white"
-              )}
+              aria-label={expanded ? "Exit fullscreen" : "Expand"}
+              title={expanded ? "Exit fullscreen" : "Fullscreen"}
+              className="absolute right-3 top-3 z-30 flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-card/85 text-muted-foreground shadow-sm backdrop-blur transition hover:bg-accent hover:text-foreground"
             >
-              <Lightbulb className="h-3.5 w-3.5" />
+              {expanded ? <Minimize2 className="h-[18px] w-[18px]" /> : <Maximize2 className="h-[18px] w-[18px]" />}
             </button>
-          )}
 
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation()
-              setExpanded((v) => !v)
-            }}
-            aria-label={expanded ? "Exit fullscreen" : "Expand"}
-            className="absolute right-4 top-1.5 z-30 rounded-full bg-white/15 p-1 text-white/80 backdrop-blur transition hover:bg-white/30 hover:text-white"
-          >
-            {expanded ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
-          </button>
-
-          <div className={cn("ipad-screen", expanded && "h-full")}>
-            <div className="ipad-gloss" />
             <div
               onClick={(e) => e.stopPropagation()}
               className={cn(
