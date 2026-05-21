@@ -49,6 +49,23 @@ interface Turn {
   text: string
 }
 
+const AGENT_EXAMPLES: Record<Lang, string[]> = {
+  nl: [
+    "Ik sta bij het koelsysteem, de druk is 2,2 bar — is dat oké?",
+    "Het apparaat-ID is C-S-55-B. Wat is de normale druk?",
+    "Ik hoor een zacht sissend geluid bij paneel drie.",
+    "Maak een incidentrapport van wat we besproken hebben.",
+    "Kun je dit ook even in het Duits samenvatten?",
+  ],
+  en: [
+    "I'm at the cooling system, pressure reads 2.2 bar — is that okay?",
+    "The equipment ID is C-S-55-B. What's the normal pressure?",
+    "I hear a faint hissing sound near panel three.",
+    "Create an incident report from what we discussed.",
+    "Can you summarise this in German as well?",
+  ],
+}
+
 const STR: Record<Lang, Record<string, string>> = {
   nl: {
     title: "Tenny — spraakassistent",
@@ -63,6 +80,7 @@ const STR: Record<Lang, Record<string, string>> = {
     hint: "Praat hands-free met Tenny over je inspectie. Spreek Nederlands, Engels of Duits.",
     micDenied: "Microfoontoegang geweigerd.",
     you: "Jij",
+    examples: "Probeer bijvoorbeeld te zeggen",
   },
   en: {
     title: "Tenny — voice assistant",
@@ -77,6 +95,7 @@ const STR: Record<Lang, Record<string, string>> = {
     hint: "Talk hands-free with Tenny about your inspection. Speak Dutch, English or German.",
     micDenied: "Microphone permission denied.",
     you: "You",
+    examples: "Try saying, for example",
   },
 }
 
@@ -308,6 +327,14 @@ export function VoiceAgent({ open, onClose, onNeedKey, lang }: Props) {
     return () => stop()
   }, [open, stop])
 
+  const sayExample = (text: string) => {
+    if (status === "live" && wsRef.current?.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify({ type: "InjectUserMessage", content: text }))
+    } else if (status !== "connecting") {
+      start()
+    }
+  }
+
   if (!open) return null
 
   const live = status === "live"
@@ -337,8 +364,28 @@ export function VoiceAgent({ open, onClose, onNeedKey, lang }: Props) {
 
         {/* Transcript */}
         <div ref={transcriptRef} className="flex-1 space-y-3 overflow-y-auto px-5 py-4">
-          {turns.length === 0 && status !== "live" && (
-            <p className="mt-6 text-center text-sm text-muted-foreground">{t.hint}</p>
+          {turns.length === 0 && (
+            <div className="pt-2">
+              <p className="text-center text-sm text-muted-foreground">{t.hint}</p>
+              <p className="mb-2 mt-5 text-center text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+                {t.examples}
+              </p>
+              <div className="flex flex-col gap-2">
+                {AGENT_EXAMPLES[lang].map((ex, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => sayExample(ex)}
+                    title={live ? ex : t.start}
+                    className="rounded-xl border border-border bg-card px-3 py-2 text-left text-sm text-foreground transition hover:border-[#3c8cfa] hover:bg-accent"
+                  >
+                    <span className="text-[#ff6428]">“</span>
+                    {ex}
+                    <span className="text-[#ff6428]">”</span>
+                  </button>
+                ))}
+              </div>
+            </div>
           )}
           {turns.map((turn, i) => (
             <div key={i} className={cn("flex", turn.role === "user" ? "justify-end" : "justify-start")}>
