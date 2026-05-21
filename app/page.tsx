@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
-import { AlertCircle, Settings, Mic, Trash2 } from "lucide-react"
+import { AlertCircle, Settings, Mic, Trash2, Copy, Check, Lightbulb } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { voiceToFormAction, STTProvider } from "@/actions/voice-to-form"
@@ -13,7 +13,7 @@ import { ThemeToggle } from "@/components/theme-toggle"
 import { SettingsModal } from "@/components/settings-modal"
 import { IpadMockup } from "@/components/ipad-mockup"
 import { getAllKeys, hasKey, type Provider } from "@/lib/apiKeys"
-import { UI, FIELD_I18N, GROUP_I18N, LANG_STORAGE_KEY, type Lang } from "@/lib/i18n"
+import { UI, FIELD_I18N, GROUP_I18N, EXAMPLE_SCRIPT, LANG_STORAGE_KEY, type Lang } from "@/lib/i18n"
 import {
   Form,
   FormControl,
@@ -63,6 +63,8 @@ export default function InspectionPage() {
   const [settingsTab, setSettingsTab] = useState<Provider>("google")
   const [imgError, setImgError] = useState(false)
   const [anomalyKey, setAnomalyKey] = useState(0)
+  const [copied, setCopied] = useState(false)
+  const [scriptLen, setScriptLen] = useState<"short" | "long">("long")
   const [lang, setLang] = useState<Lang>("nl")
   const t = UI[lang]
 
@@ -189,6 +191,56 @@ export default function InspectionPage() {
     setAnomalyKey((k) => k + 1) // remount AnomalyDetector to clear its uploaded image
   }, [form, currentDemo.defaultValues])
 
+  const copyScript = useCallback(() => {
+    navigator.clipboard?.writeText(EXAMPLE_SCRIPT[lang][scriptLen]).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1800)
+    })
+  }, [lang, scriptLen])
+
+  const scriptPanel = (
+    <div className="flex h-full flex-col bg-card">
+      <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-3">
+        <div className="flex items-center gap-2">
+          <Lightbulb className="h-4 w-4 text-[#ff6428]" />
+          <h3 className="text-sm font-bold text-foreground">{t.scriptTitle}</h3>
+          <span className="rounded bg-accent px-1.5 py-0.5 text-[10px] font-bold uppercase text-accent-foreground">
+            {lang === "nl" ? "NL" : "EN"}
+          </span>
+        </div>
+        <button
+          type="button"
+          onClick={copyScript}
+          className="flex items-center gap-1 rounded-md border border-border px-2 py-1 text-xs text-muted-foreground transition hover:border-primary/50 hover:text-primary"
+        >
+          {copied ? <Check className="h-3.5 w-3.5 text-[#33a92f]" /> : <Copy className="h-3.5 w-3.5" />}
+          {copied ? t.copied : t.copy}
+        </button>
+      </div>
+      <div className="px-4 pt-3">
+        <p className="text-xs text-muted-foreground">{t.scriptHint}</p>
+        <div className="mt-3 inline-flex rounded-lg border border-border p-0.5">
+          {(["short", "long"] as const).map((len) => (
+            <button
+              key={len}
+              type="button"
+              onClick={() => setScriptLen(len)}
+              className={cn(
+                "rounded-md px-3 py-1 text-xs font-semibold transition",
+                scriptLen === len ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              {len === "short" ? t.scriptShort : t.scriptLong}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="flex-1 overflow-y-auto whitespace-pre-line px-4 py-3 text-sm leading-relaxed text-foreground">
+        {EXAMPLE_SCRIPT[lang][scriptLen]}
+      </div>
+    </div>
+  )
+
   return (
     <div className="tennet-page-bg min-h-screen">
       <SettingsModal
@@ -239,7 +291,7 @@ export default function InspectionPage() {
 
       {/* Hero */}
       <main className="mx-auto max-w-7xl px-5 py-8 lg:py-12">
-        <div className="grid items-center gap-8 lg:grid-cols-[1fr_minmax(360px,440px)] lg:gap-12">
+        <div className="grid items-start gap-8 lg:grid-cols-[1fr_minmax(360px,440px)] lg:gap-12">
           {/* Left: copy + offshore image */}
           <div className="order-2 lg:order-1">
             <p className="text-sm font-bold uppercase tracking-wider text-[#3c8cfa]">{t.tagline}</p>
@@ -278,8 +330,8 @@ export default function InspectionPage() {
           </div>
 
           {/* Right: form inside iPad */}
-          <div className="order-1 mx-auto w-full max-w-[440px] lg:order-2">
-            <IpadMockup screenClassName="max-h-[74vh]">
+          <div className="order-1 mx-auto w-full max-w-[440px] lg:order-2 lg:sticky lg:top-20 lg:self-start">
+            <IpadMockup screenClassName="max-h-[74vh]" sidePanel={scriptPanel}>
               <div className="px-5 pb-6 pt-6 sm:px-6">
                 {/* Form header inside the device */}
                 <div className="mb-4">

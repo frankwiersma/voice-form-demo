@@ -18,6 +18,12 @@ export const UI: Record<Lang, {
   clearForm: string
   settings: string
   toggleTheme: string
+  scriptTitle: string
+  scriptHint: string
+  copy: string
+  copied: string
+  scriptShort: string
+  scriptLong: string
 }> = {
   nl: {
     appTitle: "Offshore Onderstation-inspectie",
@@ -35,6 +41,12 @@ export const UI: Record<Lang, {
     clearForm: "Formulier wissen",
     settings: "Instellingen",
     toggleTheme: "Thema wisselen",
+    scriptTitle: "Voorbeeldscript",
+    scriptHint: "Lees dit hardop voor terwijl je op Spraak invullen drukt — je ziet het formulier live invullen.",
+    copy: "Kopiëren",
+    copied: "Gekopieerd",
+    scriptShort: "Kort",
+    scriptLong: "Lang",
   },
   en: {
     appTitle: "Offshore Substation Inspection",
@@ -52,6 +64,36 @@ export const UI: Record<Lang, {
     clearForm: "Clear form",
     settings: "Settings",
     toggleTheme: "Toggle theme",
+    scriptTitle: "Example script",
+    scriptHint: "Read this aloud while you press Voice fill — you'll see the form populate live.",
+    copy: "Copy",
+    copied: "Copied",
+    scriptShort: "Short",
+    scriptLong: "Long",
+  },
+}
+
+/** Demo dictation scripts to read aloud, per language, in a short and long variant. */
+export const EXAMPLE_SCRIPT: Record<Lang, { short: string; long: string }> = {
+  nl: {
+    short: `Inspecteur Mark de Vries, 21 mei 2025 kwart over twee 's middags, onderstation Borssele Alpha, station BA-02. Weer helder, een graad of veertien. De schakelinstallatie draait normaal, geen alarmen. Bij transformator twee een lichte olievlek en wat beginnende roest. Veiligheidsuitrusting in orde, terrein schoon, beveiliging functioneert. Advies: transformator twee over twee weken opnieuw controleren op lekkage. Getekend, M.d.V.`,
+    long: `Goedemiddag, mijn naam is Mark de Vries. Het is vandaag 21 mei 2025, kwart over twee 's middags. Ik voer de routine-inspectie uit op onderstation Borssele Alpha, station BA-02. Het weer is helder, een graad of veertien, met matige wind uit het zuidwesten.
+
+Mijn algemene indruk is goed: het platform ziet er netjes en goed onderhouden uit. De schakelinstallatie en de transformatoren draaien normaal, er zijn geen alarmen en de temperaturen blijven binnen de marges. Wel zie ik bij transformator twee een lichte olievlek op de vloer en wat beginnende roest op de bevestigingsbeugels.
+
+De veiligheidsuitrusting is in orde — de brandblussers zijn gekeurd, de nooduitgangen zijn vrij en de bewegwijzering is goed leesbaar. Alles is schoon en opgeruimd. De hekken en sloten zijn in orde, de toegangscontrole werkt en de camera's functioneren. Ik hoorde wel een lichte brom bij paneel drie, maar verder geen vreemde geuren of trillingen.
+
+Als actie heb ik de olievlek opgeruimd en de beugels behandeld tegen roest. Verder niets bijzonders te melden. Mijn advies is om transformator twee over twee weken opnieuw te controleren op lekkage. Getekend, M.d.V.`,
+  },
+  en: {
+    short: `Inspector Mark de Vries, 21 May 2025 at quarter past two in the afternoon, substation Borssele Alpha, station BA-02. Weather clear, around fourteen degrees. The switchgear is running normally, no alarms. At transformer two a slight oil stain and some early rust. Safety equipment in order, site clean, security functioning. Recommendation: re-check transformer two for leakage in two weeks. Signed, M.d.V.`,
+    long: `Good afternoon, my name is Mark de Vries. Today is 21 May 2025, quarter past two in the afternoon. I'm carrying out the routine inspection at substation Borssele Alpha, station BA-02. The weather is clear, around fourteen degrees, with a moderate south-westerly wind.
+
+My general impression is good: the platform looks tidy and well maintained. The switchgear and transformers are running normally, there are no alarms and temperatures stay within limits. However, at transformer two I see a slight oil stain on the floor and some early rust on the mounting brackets.
+
+The safety equipment is in order — the fire extinguishers are inspected, the emergency exits are clear and the signage is easy to read. Everything is clean and tidy. The fences and locks are in order, access control works and the cameras are functioning. I did hear a faint hum at panel three, but no unusual smells or vibrations otherwise.
+
+As an action I cleaned up the oil stain and treated the brackets against rust. Nothing else to report. My recommendation is to re-check transformer two for leakage in two weeks. Signed, M.d.V.`,
   },
 }
 
