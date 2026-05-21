@@ -160,9 +160,6 @@ export default function InspectionPage() {
     alert("Inspection report submitted! Check console for data.")
   }
 
-  const providerLabel =
-    sttProvider === "elevenlabs" ? "ElevenLabs Scribe" : sttProvider === "deepgram" ? "Deepgram Nova" : "Google Gemini"
-
   return (
     <div className="tennet-page-bg min-h-screen">
       <SettingsModal
@@ -207,7 +204,7 @@ export default function InspectionPage() {
             <p className="mt-4 max-w-xl text-base leading-relaxed text-muted-foreground">
               Walk the platform, speak your observations, and let AI structure them into a complete
               routine inspection report — switchgear, leaks, safety equipment, security and more.
-              Snap a photo and Moondream 3 flags anomalies automatically.
+              Snap a photo and AI flags anomalies automatically.
             </p>
 
             <figure className="mt-6 overflow-hidden rounded-xl border border-border bg-[#001e50] shadow-[0_20px_50px_-25px_rgba(0,30,80,0.6)]">
@@ -245,7 +242,7 @@ export default function InspectionPage() {
                   <h2 className="text-lg font-bold leading-tight text-foreground">{APP_TITLE}</h2>
                   <p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
                     {error && !isProcessing && <AlertCircle className="h-3.5 w-3.5 text-destructive" />}
-                    <span>Voice dictation · {providerLabel}</span>
+                    <span>AI-assisted voice dictation</span>
                   </p>
 
                   <button
