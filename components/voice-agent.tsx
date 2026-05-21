@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
-import { X, Mic, PhoneOff, Loader2, Bot, AudioLines } from "lucide-react"
+import { X, Mic, PhoneOff, Loader2, Bot, AudioLines, User } from "lucide-react"
 import { getKey } from "@/lib/apiKeys"
 import { cn } from "@/lib/utils"
 import type { Lang } from "@/lib/i18n"
@@ -387,23 +387,61 @@ export function VoiceAgent({ open, onClose, onNeedKey, lang }: Props) {
               </div>
             </div>
           )}
-          {turns.map((turn, i) => (
-            <div key={i} className={cn("flex", turn.role === "user" ? "justify-end" : "justify-start")}>
+          {turns.map((turn, i) => {
+            const isUser = turn.role === "user"
+            return (
               <div
+                key={i}
                 className={cn(
-                  "max-w-[85%] rounded-2xl px-3.5 py-2 text-sm",
-                  turn.role === "user"
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-accent text-accent-foreground"
+                  "flex items-end gap-2 duration-200 animate-in fade-in slide-in-from-bottom-2",
+                  isUser ? "flex-row-reverse" : "flex-row"
                 )}
               >
-                <span className="mb-0.5 block text-[10px] font-bold uppercase tracking-wide opacity-60">
-                  {turn.role === "user" ? t.you : "Tenny"}
+                <span
+                  className={cn(
+                    "flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-white shadow-sm ring-2 ring-white/70 dark:ring-white/10",
+                    isUser ? "bg-primary" : "bg-[#ff6428]"
+                  )}
+                >
+                  {isUser ? <User className="h-3.5 w-3.5" /> : <Bot className="h-3.5 w-3.5" />}
                 </span>
-                {turn.text}
+                <div className="flex max-w-[80%] flex-col gap-0.5">
+                  <span
+                    className={cn(
+                      "px-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground",
+                      isUser ? "text-right" : "text-left"
+                    )}
+                  >
+                    {isUser ? t.you : "Tenny"}
+                  </span>
+                  <div
+                    className={cn(
+                      "rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed shadow-sm",
+                      isUser
+                        ? "rounded-br-md bg-primary text-primary-foreground"
+                        : "rounded-bl-md border border-border bg-card text-foreground"
+                    )}
+                  >
+                    {turn.text}
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+
+          {/* live "speaking" bubble while Tenny talks */}
+          {agentSpeaking && turns[turns.length - 1]?.role !== "assistant" && (
+            <div className="flex items-end gap-2">
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#ff6428] text-white shadow-sm ring-2 ring-white/70 dark:ring-white/10">
+                <Bot className="h-3.5 w-3.5" />
+              </span>
+              <div className="flex items-center gap-1 rounded-2xl rounded-bl-md border border-border bg-card px-3.5 py-3 shadow-sm">
+                <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#3c8cfa] [animation-delay:-0.2s]" />
+                <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#3c8cfa] [animation-delay:-0.1s]" />
+                <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#3c8cfa]" />
               </div>
             </div>
-          ))}
+          )}
         </div>
 
         {/* Status + controls */}
