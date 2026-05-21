@@ -84,10 +84,6 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-label, p, span, div, button, input, textarea {
-  color: inherit;
-}
-
 /* ----------------------------------------------------------------------------
    TenneT brand utilities
 ---------------------------------------------------------------------------- */
